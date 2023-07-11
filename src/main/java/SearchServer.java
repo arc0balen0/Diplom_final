@@ -10,22 +10,6 @@ import java.util.List;
 
 public class SearchServer {
 
-    static class Request {
-
-        public String word;
-
-        public Request(String word) {
-            this.word = word;
-        }
-
-        @Override
-        public String toString() {
-            return "Request { " +
-                    "word = '" + word + '\'' +
-                    " } ";
-        }
-    }
-
     private final int port;
     private final BooleanSearchEngine engine;
 
@@ -45,15 +29,17 @@ public class SearchServer {
                 ) {
                     System.out.println("Новое подключение принято!");
                     System.out.println("Адрес клиента: " + clientSocket.getInetAddress() + " , порт: " + clientSocket.getPort());
-                    String json = in.readLine();
-                    Request r = new Gson().fromJson(json, Request.class);
 
-                    if (r.word != null && !r.word.isEmpty()) {
-                        List<PageEntry> result = this.engine.search(r.word);
+                    // Считываем текстовый запрос напрямую из входного потока
+                    String query = in.readLine();
+
+                    if (query != null && !query.isEmpty()) {
+                        List<PageEntry> result = this.engine.search(query);
                         System.out.println(listToJson(result));
                         out.println(listToJson(result));
                     }
-                    System.out.println("Сообщение клиента: " + json);
+
+                    System.out.println("Сообщение клиента: " + query);
                     out.println("Привет!");
                 }
             }
@@ -66,8 +52,7 @@ public class SearchServer {
     public static <T> Object listToJson(List<T> list) {
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.create();
-        Type listType = new TypeToken<List<T>>() {
-        }.getType();
+        Type listType = new TypeToken<List<T>>() {}.getType();
         return gson.toJson(list, listType);
     }
 }
