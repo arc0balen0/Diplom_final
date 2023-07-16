@@ -8,13 +8,13 @@ import java.util.*;
 
 public class BooleanSearchEngine implements SearchEngine {
 
-    private final TreeMap<String, List<PageEntry>> words;
+    private Map<String, List<PageEntry>> words;
 
     public BooleanSearchEngine(File pdfsDir) throws IOException {
 
         List<File> listOfPDFFiles = List.of(Objects.requireNonNull(pdfsDir.listFiles()));
 
-        words = new TreeMap<>();
+        words = new HashMap<>();
 
         for (File pdf : listOfPDFFiles) {
 
@@ -34,13 +34,14 @@ public class BooleanSearchEngine implements SearchEngine {
                     }
                     freqs.put(word.toLowerCase(), freqs.getOrDefault(word.toLowerCase(), 0) + 1);
                 }
-
-                for (var entry : freqs.entrySet()) {
-                    String word = entry.getKey();
-                    int count = entry.getValue();
-                    words.computeIfAbsent(word, k -> new ArrayList<>()).add(new PageEntry(pdf.getName(), i + 1, count));
+                int count = 0;
+                for (var word : freqs.keySet()) {
+                    String wordToLowerCase = word.toLowerCase();
+                    if (freqs.get(wordToLowerCase) != null) {
+                        count = freqs.get(wordToLowerCase);
+                        words.computeIfAbsent(wordToLowerCase, k -> new ArrayList<>()).add(new PageEntry(pdf.getName(), i + 1, count));
+                    }
                 }
-
                 freqs.clear();
             }
         }
@@ -48,8 +49,16 @@ public class BooleanSearchEngine implements SearchEngine {
 
     @Override
     public List<PageEntry> search(String word) {
+
+        List<PageEntry> result = new ArrayList<>();
         String wordToLowerCase = word.toLowerCase();
-        return words.containsKey(wordToLowerCase) ? words.get(wordToLowerCase) : Collections.emptyList();
+        if (words.get(wordToLowerCase) != null) {
+            for (PageEntry pageEntry : words.get(wordToLowerCase)) {
+                result.add(pageEntry);
+            }
+        }
+        Collections.sort(result);
+        return result;
     }
 
     @Override
