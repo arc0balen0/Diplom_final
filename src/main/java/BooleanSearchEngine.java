@@ -41,18 +41,14 @@ public class BooleanSearchEngine implements SearchEngine {
         }
 
         // Сортировка по числу вхождений на этапе индексации
-        for (var entry : words.entrySet()) {
-            entry.getValue().sort(Comparator.comparingInt(PageEntry::getCount).reversed());
-        }
+        words.forEach((word, entries) -> entries.sort(Comparator.comparingInt(PageEntry::getCount).reversed()));
     }
 
     @Override
     public List<PageEntry> search(String word) {
         String wordToLowerCase = word.toLowerCase();
         if (words.containsKey(wordToLowerCase)) {
-            List<PageEntry> sortedEntries = new ArrayList<>(words.get(wordToLowerCase));
-            sortedEntries.sort(Comparator.comparingInt(PageEntry::getCount).reversed());
-            return sortedEntries;
+            return words.get(wordToLowerCase);
         }
         return Collections.emptyList();
     }
